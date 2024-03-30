@@ -36,7 +36,7 @@ monitor()
                 export IICMD_BITLY_API_TOKEN="${bitly_api_token}"
                 exec "${ircdir}/iicmd.py" \
                     --nick "${nick}" \
-                    --message "url ${msg#* }" \
+                    --message "url ${msg#\!}" \
                     --ircd "${ircdir}" \
                     --network "${network}" \
                     --channel "${channel}" \
