@@ -304,6 +304,84 @@ def test_cmd_url_title(rsp_text, expected_title, capsys, fixture_mock_requests):
     assert mock_http_url.called is True
 
 
+def test_cmd_url_two_links(capsys, fixture_mock_requests):
+    """Test cmd_url() when there are multiple URLs in message.
+
+    Only the last URL should be matched.
+    """
+    url = "https://www.example.org"
+    expected_title = "Little title"
+    expected_msg = "Title for {:s} - {:s}\n".format(url, expected_title)
+
+    rsp_text = (
+        "<html><head><title>Little title</title></head>" "<body></body></html>"
+    )
+    mock_http_url = fixture_mock_requests.get(url, text=rsp_text)
+
+    args = [
+        "./iicmd.py",
+        "--nick=irc_user",
+        "--message=url foo bar http://ignored.url {:s} message".format(url),
+        "--ircd=irc_ircd",
+        "--network=irc_network",
+        "--channel=irc_channel",
+        "--self=irc_botuser",
+    ]
+    with patch.object(sys, "argv", args):
+        iicmd.main()
+
+    captured = capsys.readouterr()
+    assert captured.out == expected_msg
+    assert captured.err == ""
+
+    assert mock_http_url.called is True
+
+
+@pytest.mark.parametrize(
+    "irc_message",
+    [
+        "url https://www.example.org",
+        "url https://www.example.org ~ here",
+        "url https://www.example.org <<< here",
+        "url bla bla https://www.example.org blablabla",
+        "url blabla https://www.example.org",
+        "url https://www.example.org also blabla",
+    ],
+)
+def test_cmd_url_parse_url(irc_message, capsys, fixture_mock_requests):
+    """Test extraction of URL in cmd_url() code path.
+
+    Based on bug in iibot-ng when URL would be 'parsed out' completely from the
+    message itself.
+    """
+    url = "https://www.example.org"
+    expected_title = "Little title"
+    expected_msg = "Title for {:s} - {:s}\n".format(url, expected_title)
+
+    rsp_text = (
+        "<html><head><title>Little title</title></head>" "<body></body></html>"
+    )
+    mock_http_url = fixture_mock_requests.get(url, text=rsp_text)
+
+    args = [
+        "./iicmd.py",
+        "--nick=irc_user",
+        "--message={:s}".format(irc_message),
+        "--ircd=irc_ircd",
+        "--network=irc_network",
+        "--channel=irc_channel",
+        "--self=irc_botuser",
+    ]
+    with patch.object(sys, "argv", args):
+        iicmd.main()
+
+    captured = capsys.readouterr()
+    assert captured.out == expected_msg
+    assert captured.err == ""
+
+    assert mock_http_url.called is True
+
+
 @pytest.mark.parametrize(
     "url,bitly_token,bitly_gid,bitly_rsp,bitly_called",
     [
