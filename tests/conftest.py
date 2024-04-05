@@ -1,3 +1,4 @@
+# Workaround https://github.com/psf/black/issues/4175
 """Conftest for pytest tests."""
 import pytest
 import requests_mock

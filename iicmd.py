@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Workaround https://github.com/psf/black/issues/4175
 """Python implementation of commands for iibot.
 
 2024/Mar/14 @ Zdenek Styblik <stybla@turnovfree.net>
