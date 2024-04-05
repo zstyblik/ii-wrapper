@@ -1,3 +1,4 @@
+# Workaround https://github.com/psf/black/issues/4175
 """Unit tests for iicmd.py."""
 import os
 import sys
