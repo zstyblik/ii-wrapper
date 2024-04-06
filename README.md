@@ -15,6 +15,18 @@ Features:
 * configuration file in order to support multiple instances of bot
 * auto reconnect
 
+## Configuration file
+
+Example of configuration file:
+
+```
+net:irc.example.com:#chan1 #chan2
+nickname:testme
+ircdir:$HOME/ii/
+bitly_api_token:api_token
+bitly_group_id:group_id
+```
+
 ## UnLicense
 
 Since the original is [UnLicense]-d, I've decided to follow the suit.
