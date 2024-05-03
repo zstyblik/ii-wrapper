@@ -7,4 +7,4 @@ flake8-import-order
 reorder-python-imports
 # tests
 pytest
-requests-mock==1.11.0
+requests-mock==1.12.1
