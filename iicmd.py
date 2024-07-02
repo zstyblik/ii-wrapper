@@ -12,6 +12,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 import traceback
 
 import requests
@@ -61,9 +62,11 @@ def get_url_short(url, bitly_gid, bitly_token):
     """
     short_url = url
     try:
+        user_agent = "iicmd_{:d}".format(int(time.time()))
         headers = {
             "Authorization": "Bearer {:s}".format(bitly_token),
             "Content-Type": "application/json",
+            "User-Agent": user_agent,
         }
         data = {
             "long_url": url,
@@ -99,7 +102,9 @@ def get_url_title(url):
     try:
         session = requests.Session()
         session.max_redirects = HTTP_MAX_REDIRECTS
-        rsp_title = session.get(url, timeout=HTTP_TIMEOUT)
+        user_agent = "iicmd_{:d}".format(int(time.time()))
+        headers = {"User-Agent": user_agent}
+        rsp_title = session.get(url, headers=headers, timeout=HTTP_TIMEOUT)
         rsp_title.raise_for_status()
 
         match = re.search(r"<title>(?P<title>[^<]*)<\/title>", rsp_title.text)
