@@ -62,7 +62,7 @@ monitor()
 
 monitor_link()
 {
-    local iipid=${1}
+    local iipid="${1}"
     IFS='
 '
     tail -f -n1 --pid="${iipid}" "${ircdir}/${network}/out" | \
