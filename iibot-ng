@@ -89,7 +89,7 @@ LOCK_DIR="/tmp/${IRC_CONFIG_NAME}.lock"
 
 if [ ! -r "${IRC_CONFIG}" ]; then
     printf "Config file '%s' doesn't exist or is not readable.\n" \
-        ${IRC_CONFIG} 1>&2
+        "${IRC_CONFIG}" 1>&2
     exit 2
 fi
 
