@@ -17,7 +17,7 @@ set -u
 monitor()
 {
     local iipid="${1}"
-    tail -f -n1 --pid=${iipid} "${ircdir}/${network}/${channel}/out" | \
+    tail -f -n1 --pid="${iipid}" "${ircdir}/${network}/${channel}/out" | \
         # NOTE: format of output changed in v1.8
         while read -r nixtime nick msg; do
             # if msg is by the system ignore it
@@ -65,7 +65,7 @@ monitor_link()
     local iipid=${1}
     IFS='
 '
-    tail -f -n1 --pid=${iipid} "${ircdir}/${network}/out" | \
+    tail -f -n1 --pid="${iipid}" "${ircdir}/${network}/out" | \
         while read -r response; do
             if printf -- "%s" "${response}" | grep -q -i -e 'Closing Link' -E -e "${nickname}.*ping timeout"; then
                 printf "Killing bot.\n" 1>&2
