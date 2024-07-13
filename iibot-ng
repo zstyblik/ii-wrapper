@@ -25,7 +25,7 @@ monitor()
                 continue
             fi
             # strip < and >. if msg is by ourself ignore it
-            nick=$(printf -- "${nick}" | sed -e 's@^<@@' | sed -e 's@>$@@')
+            nick=$(printf -- "%s" "${nick}" | sed -e 's@^<@@' | sed -e 's@>$@@')
             if [ "${nick}" = "${nickname}" ]; then
                 continue
             fi
@@ -78,7 +78,7 @@ monitor_link()
 remove_lock()
 {
     if [ -n "${pids}" ]; then
-        printf -- "${pids}" | xargs kill || true
+        printf -- "%s" "${pids}" | xargs kill || true
     fi
     rmdir "${LOCK_DIR}"
 }
