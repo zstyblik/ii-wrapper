@@ -17,7 +17,7 @@ set -u
 monitor()
 {
     local iipid="${1}"
-    tail -f -n1 --pid=${iipid} "${ircdir}/${network}/${channel}/out" | \
+    tail -f -n1 --pid="${iipid}" "${ircdir}/${network}/${channel}/out" | \
         # NOTE: format of output changed in v1.8
         while read -r nixtime nick msg; do
             # if msg is by the system ignore it
@@ -25,7 +25,7 @@ monitor()
                 continue
             fi
             # strip < and >. if msg is by ourself ignore it
-            nick=$(printf -- "${nick}" | sed -e 's@^<@@' | sed -e 's@>$@@')
+            nick=$(printf -- "%s" "${nick}" | sed -e 's@^<@@' | sed -e 's@>$@@')
             if [ "${nick}" = "${nickname}" ]; then
                 continue
             fi
@@ -62,10 +62,10 @@ monitor()
 
 monitor_link()
 {
-    local iipid=${1}
+    local iipid="${1}"
     IFS='
 '
-    tail -f -n1 --pid=${iipid} "${ircdir}/${network}/out" | \
+    tail -f -n1 --pid="${iipid}" "${ircdir}/${network}/out" | \
         while read -r response; do
             if printf -- "%s" "${response}" | grep -q -i -e 'Closing Link' -E -e "${nickname}.*ping timeout"; then
                 printf "Killing bot.\n" 1>&2
@@ -78,7 +78,7 @@ monitor_link()
 remove_lock()
 {
     if [ -n "${pids}" ]; then
-        printf -- "${pids}" | xargs kill || true
+        printf -- "%s" "${pids}" | xargs kill || true
     fi
     rmdir "${LOCK_DIR}"
 }
@@ -89,7 +89,7 @@ LOCK_DIR="/tmp/${IRC_CONFIG_NAME}.lock"
 
 if [ ! -r "${IRC_CONFIG}" ]; then
     printf "Config file '%s' doesn't exist or is not readable.\n" \
-        ${IRC_CONFIG} 1>&2
+        "${IRC_CONFIG}" 1>&2
     exit 2
 fi
 
@@ -132,8 +132,15 @@ time_slept=0
 while ! test -p "${ircdir}/${network}/in"; do
     sleep 1
     time_slept=$((time_slept + 1))
-    if [ ${time_slept} -ge 15 ]; then
-        break
+    if [ ${time_slept} -ge 60 ]; then
+        # We either didn't get the connection or something went wrong -> crash.
+        #
+        # NOTE(zstyblik): we cannot continue without pipe. If we do, then it
+        # looks like we will end up with files instead of pipes(which is bad).
+        # This doesn't mean that pipe cannot go away later, but still.
+        printf "Pipe '%s' still does not exist - giving up.\n" \
+            "${ircdir}/${network}/in" 1>&2
+        exit 1
     fi
 done
 
@@ -143,7 +150,7 @@ pids=$(printf -- "%s %s" "${pids}" $!)
 # auth to services
 if [ -e "${ircdir}/${network}/ident" ]; then
     printf -- "/j nickserv identify %s\n" \
-        "$(<"${ircdir}/${network}/ident")" > "${ircdir}/${network}/in"
+        "$(cat "${ircdir}/${network}/ident")" > "${ircdir}/${network}/in"
 fi
 # clean that up - ident passwd is in there
 rm -f "${ircdir}/${network}/nickserv/out"
@@ -151,10 +158,11 @@ rm -f "${ircdir}/${network}/nickserv/out"
 sleep 3
 # join channels
 for channel in $(printf -- "%s" "${net_conf}" | awk -F':' '{ print $3 }'); do
-    printf -- "/j %s\n" "${channel}" > "${ircdir}/${network}/in"
+    rm -f "${ircdir}/${network}/${channel}/in"
     if [ ! -e "${ircdir}/${network}/${channel}/out" ]; then
         touch "${ircdir}/${network}/${channel}/out"
     fi
+    printf -- "/j %s\n" "${channel}" > "${ircdir}/${network}/in"
     monitor "${pid}" &
     pids=$(printf -- "%s %s" "${pids}" $!)
 done
