@@ -132,8 +132,15 @@ time_slept=0
 while ! test -p "${ircdir}/${network}/in"; do
     sleep 1
     time_slept=$((time_slept + 1))
-    if [ ${time_slept} -ge 15 ]; then
-        break
+    if [ ${time_slept} -ge 60 ]; then
+        # We either didn't get the connection or something went wrong -> crash.
+        #
+        # NOTE(zstyblik): we cannot continue without pipe. If we do, then it
+        # looks like we will end up with files instead of pipes(which is bad).
+        # This doesn't mean that pipe cannot go away later, but still.
+        printf "Pipe '%s' still does not exist - giving up.\n" \
+            "${ircdir}/${network}/in" 1>&2
+        exit 1
     fi
 done
 
