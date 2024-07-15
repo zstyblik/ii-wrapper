@@ -16,6 +16,7 @@ set -u
 
 monitor()
 {
+    # shellcheck disable=SC3043
     local iipid="${1}"
     tail -f -n1 --pid="${iipid}" "${ircdir}/${network}/${channel}/out" | \
         # NOTE: format of output changed in v1.8
@@ -24,6 +25,8 @@ monitor()
             if [ "$nick" = '-!-' ]; then
                 continue
             fi
+            # shellcheck disable=SC2034
+            nixtime_is_unused="${nixtime}"
             # strip < and >. if msg is by ourself ignore it
             nick=$(printf -- "%s" "${nick}" | sed -e 's@^<@@' | sed -e 's@>$@@')
             if [ "${nick}" = "${nickname}" ]; then
@@ -62,6 +65,7 @@ monitor()
 
 monitor_link()
 {
+    # shellcheck disable=SC3043
     local iipid="${1}"
     IFS='
 '
