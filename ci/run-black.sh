@@ -16,6 +16,8 @@ else
     exit 1
 fi
 
+cd "$(dirname "${0}")/.."
+
 # shellcheck disable=SC2086
 find . ! -path '*/\.*' -name '*.py' -print0 | \
     xargs -0 -- python3 -m black ${black_arg} -l 80
