@@ -233,13 +233,13 @@ def parse_args():
         args.nick = "unknown.stranger"
 
     if not args.ircd:
-        raise argparse.ArgumentError("Argument 'ircd' must not be empty")
+        parser.error("Argument 'ircd' must not be empty")
 
     if not args.network:
-        raise argparse.ArgumentError("Argument 'network' must not be empty")
+        parser.error("Argument 'network' must not be empty")
 
     if not args.channel:
-        raise argparse.ArgumentError("Argument 'channel' must not be empty")
+        parser.error("Argument 'channel' must not be empty")
 
     return args
 
