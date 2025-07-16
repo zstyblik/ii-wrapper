@@ -510,3 +510,22 @@ def test_cmd_url_with_bitly(fixture_mock_requests, capsys, monkeypatch):
 
     assert mock_http_url.called is True
     assert mock_http_bitly.called is True
+
+
+def test_msg_ourself(capsys):
+    """Test that messages by ourself are ignored."""
+    args = [
+        "./iicmd.py",
+        "--nick=irc_botuser",
+        "--message=fortune",
+        "--ircd=irc_ircd",
+        "--network=irc_network",
+        "--channel=irc_channel",
+        "--self=irc_botuser",
+    ]
+    with patch.object(sys, "argv", args):
+        iicmd.main()
+
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == ""

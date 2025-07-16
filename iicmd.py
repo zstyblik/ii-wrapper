@@ -150,6 +150,10 @@ def main():
     logging.basicConfig(stream=sys.stderr, encoding="utf-8")
     args = parse_args()
 
+    if args.nick == args.self:
+        # Message by ourself? Ignore it.
+        return
+
     cmd = args.message.split(" ")[0]
     extra = " ".join(args.message.split(" ")[1:])
     # Strip leading/trailing whitespace and check, if we have any "extra" left
