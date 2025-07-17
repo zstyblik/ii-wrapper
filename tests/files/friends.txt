@@ -1,0 +1,5 @@
+# version = 2.4.1 (20021124)
+# written = 1744454908
+handle=tester1%hosts=*!*test1@example.com%globflags=%chanflags=#chan1,ao, #chan2,va,%password=%comment=%
+handle=tester2%hosts=*!*@*.example.com *!*@somewhere.example.com%globflags=av%chanflags=%password=%comment=%
+handle=tester3%hosts=*!*@test3.example.net%globflags=%chanflags=#chan1,o, #chan2,ao,%password=%comment=%

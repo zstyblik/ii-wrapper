@@ -150,6 +150,10 @@ def main():
     logging.basicConfig(stream=sys.stderr, encoding="utf-8")
     args = parse_args()
 
+    if args.nick == args.self:
+        # Message by ourself? Ignore it.
+        return
+
     cmd = args.message.split(" ")[0]
     extra = " ".join(args.message.split(" ")[1:])
     # Strip leading/trailing whitespace and check, if we have any "extra" left
@@ -191,25 +195,55 @@ def main():
 def parse_args():
     """Return parsed CLI args."""
     parser = argparse.ArgumentParser()
-    parser.add_argument("--nick", type=str, required=True)
-    parser.add_argument("--message", type=str, required=True)
-    parser.add_argument("--ircd", type=str, required=True)
-    parser.add_argument("--network", type=str, required=True)
-    parser.add_argument("--channel", type=str, required=True)
-    parser.add_argument("--self", type=str, required=True)
+    parser.add_argument(
+        "--nick",
+        type=str,
+        required=True,
+        help="Nickname of user who sent the message.",
+    )
+    parser.add_argument(
+        "--message",
+        type=str,
+        required=True,
+        help="ii message to be processed.",
+    )
+    parser.add_argument(
+        "--ircd",
+        type=str,
+        required=True,
+        help="Full path to IRC/ii directory.",
+    )
+    parser.add_argument(
+        "--network",
+        type=str,
+        required=True,
+        help="Name of IRC network message came from.",
+    )
+    parser.add_argument(
+        "--channel",
+        type=str,
+        required=True,
+        help="Name of channel message came from.",
+    )
+    parser.add_argument(
+        "--self",
+        type=str,
+        required=True,
+        help="Bot's nickname.",
+    )
     args = parser.parse_args()
 
     if not args.nick:
         args.nick = "unknown.stranger"
 
     if not args.ircd:
-        raise argparse.ArgumentError("Argument 'ircd' must not be empty")
+        parser.error("Argument 'ircd' must not be empty")
 
     if not args.network:
-        raise argparse.ArgumentError("Argument 'network' must not be empty")
+        parser.error("Argument 'network' must not be empty")
 
     if not args.channel:
-        raise argparse.ArgumentError("Argument 'channel' must not be empty")
+        parser.error("Argument 'channel' must not be empty")
 
     return args
 

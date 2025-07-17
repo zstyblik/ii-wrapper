@@ -1,0 +1,4 @@
+# version = 2.4.1 (20021124)
+# written = 1744454908
+handle=joe%hosts=*!joe@*.example.com%globflags=%chanflags=#example,ao,%password=%comment=%
+handle=mike%hosts=*!*@mike.example.com *!*@mike-home.example.com%globflags=av%chanflags=%password=%comment=%
