@@ -23,6 +23,13 @@ monitor()
         while read -r nixtime nick msg; do
             # if msg is by the system ignore it
             if [ "$nick" = '-!-' ]; then
+                if printf -- "%s" "${msg}" | grep -q -e ' has joined ' ; then
+                    exec "${ircdir}/iifriends.py" \
+                        --message "${msg}" \
+                        --ircd "${ircdir}" \
+                        --network "${network}" \
+                        --self "${nickname}" > /dev/null &
+                fi
                 continue
             fi
             # shellcheck disable=SC2034
