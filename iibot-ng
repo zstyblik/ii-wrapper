@@ -169,6 +169,9 @@ rm -f "${ircdir}/${network}/nickserv/out"
 sleep 3
 # join channels
 for channel in $(printf -- "%s" "${net_conf}" | awk -F':' '{ print $3 }'); do
+    # NOTE(zstyblik): if this is first ever join, directory doesn't exist and
+    # touch will fail. Fail is ok, just not in this case.
+    mkdir -p "${ircdir}/${network}/${channel}"
     rm -f "${ircdir}/${network}/${channel}/in"
     if [ ! -e "${ircdir}/${network}/${channel}/out" ]; then
         touch "${ircdir}/${network}/${channel}/out"
