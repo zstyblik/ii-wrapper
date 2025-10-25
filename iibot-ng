@@ -39,6 +39,11 @@ monitor()
             if [ "${nick}" = "${nickname}" ]; then
                 continue
             fi
+            # NOTE: if we have two bots in the same channel, iicmd must be
+            # disabled. Why? How about endless loop of URL titles? That's why.
+            if [ "${iicmd_enabled}" = "false" ]; then
+                continue
+            fi
 
             # if msg contains a url, transform to url command
             if printf -- "%s" "${msg}" | grep -q -E -e 'https?://' ; then
@@ -112,6 +117,12 @@ nickname=$(grep -e '^nickname:' "${IRC_CONFIG}" | awk -F':' '{ print $2 }' |\
 nickname=${nickname:-"testme"}
 net_conf=$(grep -e '^net:' "${IRC_CONFIG}" | sort | uniq | head -n1)
 network=$(printf -- "%s" "${net_conf}" | awk -F: '{ print $2 }')
+
+iicmd_enabled=$(grep -e '^iicmd_enabled:' "${IRC_CONFIG}" | cut -d ':' -f 2- | head -n 1)
+if [ -z "${iicmd_enabled}" ]; then
+    iicmd_enabled="true"
+fi
+
 bitly_api_token=$(grep -e '^bitly_api_token:' "${IRC_CONFIG}" | sort | uniq | head -n1)
 bitly_group_id=$(grep -e '^bitly_group_id:' "${IRC_CONFIG}" | sort | uniq | head -n1)
 if [ -z "${net_conf}" ] || [ -z "${network}" ]; then
