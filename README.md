@@ -23,6 +23,10 @@ Example of configuration file:
 net:irc.example.com:#chan1 #chan2
 nickname:testme
 ircdir:$HOME/ii/
+# Enable/disable iicmd eg. if you have two bots in the same channel(s).
+# iicmd is enabled by default.
+# `iicmd_enabled:false` to disable it.
+iicmd_enabled:true
 bitly_api_token:api_token
 bitly_group_id:group_id
 ```
