@@ -131,10 +131,15 @@ def cmd_url(extra):
 
     url = match.group("url")
     # Convert YouTube URLs
+    # NOTE(zstyblik): reasons:
+    # 1. embed URLs don't work in browser(anymore?)
+    # 2. won't get title
+    # 3. GUI client can probably deal with embedding/unfurling - Slack can.
     url = re.sub(
-        r".*youtube\..*v=([^&]+).*", r"http://youtube.com/embed/\1", url
+        r"https://youtube.com/embed/([^&]+).*",
+        r"https://www.youtube.com/watch?v=\1",
+        url,
     )
-    url = re.sub(r".*youtu\.be/(.+)", r"http://youtube.com/embed/\1", url)
     # Try to get URL's title
     url_title = get_url_title(url)
     bitly_gid = os.getenv("IICMD_BITLY_GROUP_ID", None)

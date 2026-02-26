@@ -225,11 +225,27 @@ def test_cmd_url_no_url_in_message(capsys):
     [
         (
             "https://www.youtube.com/watch?v=9G-fg6G738c",
-            "http://youtube.com/embed/9G-fg6G738c",
+            "https://www.youtube.com/watch?v=9G-fg6G738c",
+        ),
+        (
+            "https://youtu.be/9G-fg6G738c",
+            "https://youtu.be/9G-fg6G738c",
         ),
         (
             "https://youtu.be/9G-fg6G738c?si=KD5OpJ_F2yTPIK4E",
-            "http://youtube.com/embed/9G-fg6G738c?si=KD5OpJ_F2yTPIK4E",
+            "https://youtu.be/9G-fg6G738c?si=KD5OpJ_F2yTPIK4E",
+        ),
+        (
+            "https://youtube.com/embed/9G-fg6G738c",
+            "https://www.youtube.com/watch?v=9G-fg6G738c",
+        ),
+        (
+            "https://youtube.com/embed/9G-fg6G738c?si=KD5OpJ_F2yTPIK4E",
+            "https://www.youtube.com/watch?v=9G-fg6G738c?si=KD5OpJ_F2yTPIK4E",
+        ),
+        (
+            "https://www.youtube.com/shorts/jyzmRnSpOJc",
+            "https://www.youtube.com/shorts/jyzmRnSpOJc",
         ),
     ],
 )
