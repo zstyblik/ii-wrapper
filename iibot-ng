@@ -109,14 +109,17 @@ if [ ! -r "${IRC_CONFIG}" ]; then
     exit 2
 fi
 
-
-ircdir=$(grep -e '^ircdir:' "${IRC_CONFIG}" | cut -d ':' -f 2- | head -n 1)
-ircdir=${ircdir:-${HOME}/tmp/ii/ii/}
 nickname=$(grep -e '^nickname:' "${IRC_CONFIG}" | awk -F':' '{ print $2 }' |\
     head -n 1)
 nickname=${nickname:-"testme"}
 net_conf=$(grep -e '^net:' "${IRC_CONFIG}" | sort | uniq | head -n1)
 network=$(printf -- "%s" "${net_conf}" | awk -F: '{ print $2 }')
+if [ -z "${network}" ]; then
+    printf "Name of IRC network cannot be empty.\n" 1>&2
+    exit 2
+fi
+ircdir=$(grep -e '^ircdir:' "${IRC_CONFIG}" | cut -d ':' -f 2- | head -n 1)
+ircdir=${ircdir:-"${HOME}/irc"}
 
 iicmd_enabled=$(grep -e '^iicmd_enabled:' "${IRC_CONFIG}" | cut -d ':' -f 2- | head -n 1)
 if [ -z "${iicmd_enabled}" ]; then
