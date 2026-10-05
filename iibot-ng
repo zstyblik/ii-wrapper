@@ -1,30 +1,35 @@
 #!/bin/sh
 # Desc: Wrapper for iibot based on script by c00kiemon5ter
 #
-# Example of .cfg file:
-# ~~~
-# net:irc.ssh.cz:#chan1 #chan2
-# nickname:testme
-# ircdir:$HOME/ii/
-# bitly_api_token:api_token
-# bitly_group_id:group_id
-# ~~~
-#
 # 2017/Apr/08 @ Zdenek Styblik <stybla@turnovfree.net>
 set -e
 set -u
+
+check_parser_error()
+{
+    # shellcheck disable=SC3043
+    local value="${1}"
+    # shellcheck disable=SC3043
+    local label="${2}"
+    if [ "${value}" = "parser-error" ]; then
+        printf -- "Config parser failed to get value for variable '%s'.\n" "${label}" 1>&2
+        exit 1
+    fi
+}
 
 monitor()
 {
     # shellcheck disable=SC3043
     local iipid="${1}"
     tail -f -n1 --pid="${iipid}" "${ircdir}/${network}/${channel}/out" | \
-        # NOTE: format of output changed in v1.8
+        # NOTE(zstyblik): unfortunately this fetches the last message in channel
+        # on startup, therefore ultimately leads to some "repetition".
+        # NOTE(zstyblik): format of output changed in v1.8
         while read -r nixtime nick msg; do
             # if msg is by the system ignore it
             if [ "$nick" = '-!-' ]; then
                 if printf -- "%s" "${msg}" | grep -q -e ' has joined ' ; then
-                    exec "${ircdir}/iifriends.py" \
+                    exec "${scripts_dir}/iifriends.py" \
                         --message "${msg}" \
                         --ircd "${ircdir}" \
                         --network "${network}" \
@@ -39,17 +44,18 @@ monitor()
             if [ "${nick}" = "${nickname}" ]; then
                 continue
             fi
-            # NOTE: if we have two bots in the same channel, iicmd must be
-            # disabled. Why? How about endless loop of URL titles? That's why.
+            # NOTE(zstyblik): if we have two bots in the same channel, iicmd
+            # must be disabled. Why? How about endless loop of URL titles?
+            # That's why.
             if [ "${iicmd_enabled}" = "false" ]; then
                 continue
             fi
 
             # if msg contains a url, transform to url command
-            if printf -- "%s" "${msg}" | grep -q -E -e 'https?://' ; then
+            if printf -- "%s" "${msg}" | grep -q -E -e 'https?://'; then
                 export IICMD_BITLY_GROUP_ID="${bitly_group_id}"
                 export IICMD_BITLY_API_TOKEN="${bitly_api_token}"
-                exec "${ircdir}/iicmd.py" \
+                exec "${scripts_dir}/iicmd.py" \
                     --nick "${nick}" \
                     --message "url ${msg#\!}" \
                     --ircd "${ircdir}" \
@@ -62,8 +68,8 @@ monitor()
             # happening.
             #
             # if msg is a command, invoke iicmd
-            if printf -- "%s" "${msg}" | grep -q -E -e '^!' ; then
-                exec "${ircdir}/iicmd.py" \
+            if printf -- "%s" "${msg}" | grep -q -E -e '^!'; then
+                exec "${scripts_dir}/iicmd.py" \
                     --nick "${nick}" \
                     --message "${msg#\!}" \
                     --ircd "${ircdir}" \
@@ -99,40 +105,51 @@ remove_lock()
     rmdir "${LOCK_DIR}"
 }
 
+# FIXME: cleanup once systemd unit is updated
 IRC_CONFIG=${1:?Supply name of IRC config to use.}
 IRC_CONFIG_NAME=$(basename -- "${IRC_CONFIG}")
 LOCK_DIR="/tmp/${IRC_CONFIG_NAME}.lock"
 
-if [ ! -r "${IRC_CONFIG}" ]; then
+scripts_dir=$(dirname -- "${0}")
+irc_config_dir=$(dirname -- "${IRC_CONFIG}")
+irc_config_toml=$(basename -s .cfg -- "${IRC_CONFIG}")
+irc_config_toml=$(basename -s .toml -- "${irc_config_toml}")
+irc_config_toml="${irc_config_dir}/${irc_config_toml}.toml"
+if [ ! -r "${irc_config_toml}" ]; then
     printf "Config file '%s' doesn't exist or is not readable.\n" \
-        "${IRC_CONFIG}" 1>&2
+        "${irc_config_toml}" 1>&2
     exit 2
 fi
 
-nickname=$(grep -e '^nickname:' "${IRC_CONFIG}" | awk -F':' '{ print $2 }' |\
-    head -n 1)
+nickname=$("${scripts_dir}/config_lookup.py" -f "${irc_config_toml}" -s ii.settings -o nickname)
+check_parser_error "${nickname}" "nickname"
 nickname=${nickname:-"testme"}
-net_conf=$(grep -e '^net:' "${IRC_CONFIG}" | sort | uniq | head -n1)
-network=$(printf -- "%s" "${net_conf}" | awk -F: '{ print $2 }')
+
+network=$("${scripts_dir}/config_lookup.py" -f "${irc_config_toml}" -s ii.settings -o server)
+check_parser_error "${network}" "network"
 if [ -z "${network}" ]; then
-    printf "Name of IRC network cannot be empty.\n" 1>&2
+    printf "Name of IRC network must not be empty.\n" 1>&2
     exit 2
 fi
-ircdir=$(grep -e '^ircdir:' "${IRC_CONFIG}" | cut -d ':' -f 2- | head -n 1)
+ircdir=$("${scripts_dir}/config_lookup.py" -f "${irc_config_toml}" -s ii.settings -o ircdir)
+check_parser_error "${ircdir}" "ircdir"
 ircdir=${ircdir:-"${HOME}/irc"}
 
-iicmd_enabled=$(grep -e '^iicmd_enabled:' "${IRC_CONFIG}" | cut -d ':' -f 2- | head -n 1)
-if [ -z "${iicmd_enabled}" ]; then
+channels=$("${scripts_dir}/config_lookup.py" -f "${irc_config_toml}" -s 'channel.*' -o 'name')
+check_parser_error "${channels}" "channels"
+
+iicmd_enabled=$("${scripts_dir}/config_lookup.py" -f "${irc_config_toml}" -s ii.cmd -o enabled)
+check_parser_error "${iicmd_enabled}" "iicmd_enabled"
+if printf -- "%s" "${iicmd_enabled}" | grep -q -i -e 'true'; then
     iicmd_enabled="true"
+else
+    iicmd_enabled="false"
 fi
 
-bitly_api_token=$(grep -e '^bitly_api_token:' "${IRC_CONFIG}" | sort | uniq | head -n1)
-bitly_group_id=$(grep -e '^bitly_group_id:' "${IRC_CONFIG}" | sort | uniq | head -n1)
-if [ -z "${net_conf}" ] || [ -z "${network}" ]; then
-    printf "No network configuration has been found in '%s'.\n" \
-        "${IRC_CONFIG}" 1>&2
-    exit 1
-fi
+bitly_api_token=$("${scripts_dir}/config_lookup.py" -f "${irc_config_toml}" -s bitly -o api_token)
+check_parser_error "${bitly_api_token}" "bitly_api_token"
+bitly_group_id=$("${scripts_dir}/config_lookup.py" -f "${irc_config_toml}" -s bitly -o group_id)
+check_parser_error "${bitly_group_id}" "bitly_group_id"
 
 mkdir -p "${LOCK_DIR}" || \
     ( printf "Failed to create lock for '%s'.\n" "${IRC_CONFIG}" 1>&2; exit 1; )
@@ -145,11 +162,14 @@ chmod 600 "${ircdir}"/*/ident 1> /dev/null 2>&1 || true
 pids=""
 # cleanup stale "in" pipes turned into files
 find "${ircdir}/${network}/" -name 'in' -type f -delete
-# connect to network - password is set through the env var IIPASS
-# NOTE: name of env variable MUST BE given as an CLI arg, eg. -k IIPASS,
-# therefore this currently doesn't work.
-ii -i "${ircdir}" -n "${nickname}" -s "${network}" \
-    -f "${nickname}" >> "${ircdir}/${network}.log" 2>&1 &
+# NOTE(zstyblik): if server requires password on connect, then password must be
+# stored in ENV variable and the name of ENV variable MUST BE given as CLI arg,
+# eg. -k IIPASS.
+#
+# NOTE(zstyblik): there is no way to know if wrapper or ii failed. There will be
+# a PID and RC=0 regardless of failure, therefore these two are worthless.
+"${scripts_dir}/ii_wrapper.py" \
+    -f "${irc_config_toml}" >> "${ircdir}/${network}.log" 2>&1 &
 pid="$!"
 
 # wait for the connection
@@ -182,7 +202,7 @@ rm -f "${ircdir}/${network}/nickserv/out"
 
 sleep 3
 # join channels
-for channel in $(printf -- "%s" "${net_conf}" | awk -F':' '{ print $3 }'); do
+for channel in $(printf -- "%s" "${channels}" | tr ',' ' '); do
     # NOTE(zstyblik): if this is first ever join, directory doesn't exist and
     # touch will fail. Fail is ok, just not in this case.
     mkdir -p "${ircdir}/${network}/${channel}"
