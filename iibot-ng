@@ -151,7 +151,7 @@ check_parser_error "${bitly_api_token}" "bitly_api_token"
 bitly_group_id=$("${scripts_dir}/config_lookup.py" -f "${irc_config_toml}" -s bitly -o group_id)
 check_parser_error "${bitly_group_id}" "bitly_group_id"
 
-mkdir -p "${LOCK_DIR}" || \
+mkdir "${LOCK_DIR}" || \
     ( printf "Failed to create lock for '%s'.\n" "${IRC_CONFIG}" 1>&2; exit 1; )
 trap remove_lock INT QUIT TERM EXIT
 
