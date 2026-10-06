@@ -157,7 +157,7 @@ trap remove_lock INT QUIT TERM EXIT
 
 # some privacy please, thanks
 chmod 700 "${ircdir}"
-chmod 600 "${ircdir}"/*/ident 1> /dev/null 2>&1 || true
+chmod 600 "${ircdir}/${network}/"ident 1> /dev/null 2>&1 || true
 
 pids=""
 # cleanup stale "in" pipes turned into files
