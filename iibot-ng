@@ -107,14 +107,12 @@ remove_lock()
 
 # FIXME: cleanup once systemd unit is updated
 IRC_CONFIG=${1:?Supply name of IRC config to use.}
-IRC_CONFIG_NAME=$(basename -- "${IRC_CONFIG}")
-LOCK_DIR="/tmp/${IRC_CONFIG_NAME}.lock"
 
 scripts_dir=$(dirname -- "${0}")
 irc_config_dir=$(dirname -- "${IRC_CONFIG}")
-irc_config_toml=$(basename -s .cfg -- "${IRC_CONFIG}")
-irc_config_toml=$(basename -s .toml -- "${irc_config_toml}")
-irc_config_toml="${irc_config_dir}/${irc_config_toml}.toml"
+irc_config_name=$(basename -s .cfg -- "${IRC_CONFIG}")
+irc_config_name=$(basename -s .toml -- "${irc_config_name}")
+irc_config_toml="${irc_config_dir}/${irc_config_name}.toml"
 if [ ! -r "${irc_config_toml}" ]; then
     printf "Config file '%s' doesn't exist or is not readable.\n" \
         "${irc_config_toml}" 1>&2
@@ -151,6 +149,7 @@ check_parser_error "${bitly_api_token}" "bitly_api_token"
 bitly_group_id=$("${scripts_dir}/config_lookup.py" -f "${irc_config_toml}" -s bitly -o group_id)
 check_parser_error "${bitly_group_id}" "bitly_group_id"
 # NOTE(zstyblik): lock dir is unnecessary when running under systemd.
+LOCK_DIR="/tmp/${irc_config_name}.lock"
 mkdir "${LOCK_DIR}" || \
     ( printf "Failed to create lock for '%s'.\n" "${IRC_CONFIG}" 1>&2; exit 1; )
 trap remove_lock INT QUIT TERM EXIT
