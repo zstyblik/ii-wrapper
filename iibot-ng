@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 # Desc: Wrapper for iibot based on script by c00kiemon5ter
 #
 # 2017/Apr/08 @ Zdenek Styblik <stybla@turnovfree.net>
