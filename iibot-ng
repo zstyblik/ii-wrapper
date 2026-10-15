@@ -162,8 +162,8 @@ pids=""
 # cleanup stale "in" pipes turned into files
 find "${ircdir}/${network}/" -name 'in' -type f -delete
 # Rotate log, sort of.
-cat "${ircdir}/${network}.log" >> "${ircdir}/${network}.log.1" || true
-cat /dev/null > "${ircdir}/${network}.log"
+( cat "${ircdir}/${network}.log" >> "${ircdir}/${network}.log.1" && cat /dev/null > "${ircdir}/${network}.log" ) || \
+    printf "Failed to log rotate '%s' - continue anyway.\n" "${ircdir}/${network}.log" 1>&2
 # NOTE(zstyblik): if server requires password on connect, then password must be
 # stored in ENV variable and the name of ENV variable MUST BE given as CLI arg,
 # eg. -k IIPASS.
