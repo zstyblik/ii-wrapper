@@ -14,6 +14,7 @@ Features:
 * commands
 * configuration file in order to support multiple instances of bot
 * auto reconnect
+* auto voice/op
 
 ## Configuration file
 
