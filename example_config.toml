@@ -1,0 +1,30 @@
+[ii.settings]
+ircdir = "/some/path/irc"
+server = "irc.example.com"
+port = 6667
+sockname = ""
+nickname = "mynick"
+realname = ""
+server_password = ""
+
+# Enable/disable support for commands.
+[ii.cmd]
+enabled = true
+
+# Enable/disable support for auto voice/op.
+[ii.friends]
+enabled = true
+
+[channel.label1]
+autojoin = true
+name = "#channel1"
+password = ""
+
+[channel.label2]
+autojoin = true
+name = "#channel2"
+password = ""
+
+[bitly]
+api_token = ""
+group_id = ""

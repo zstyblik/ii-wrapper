@@ -18,18 +18,34 @@ Features:
 
 ## Configuration file
 
-Example of configuration file:
+Structure of configuration file in TOML format is currently experimental,
+unstable and subject to change. Example of configuration file:
 
 ```
-net:irc.example.com:#chan1 #chan2
-nickname:testme
-ircdir:$HOME/ii/
-# Enable/disable iicmd eg. if you have two bots in the same channel(s).
-# iicmd is enabled by default.
-# `iicmd_enabled:false` to disable it.
-iicmd_enabled:true
-bitly_api_token:api_token
-bitly_group_id:group_id
+[ii.settings]
+ircdir = "/some/path/irc"
+server = "irc.example.com"
+nickname = "mynick"
+
+# Enable/disable support for commands.
+[ii.cmd]
+enabled = true
+
+# Enable/disable support for auto voice/op.
+[ii.friends]
+enabled = true
+
+# Joins #channel1 and #channel2 on startup.
+[channel.arbitrarylabel1]
+name = "#channel1"
+
+[channel.arbitrarylabel2]
+name = "#channel2"
+
+# In order to enable URL shortening API token and group ID must be given.
+[bitly]
+api_token = ""
+group_id = ""
 ```
 
 ## UnLicense
