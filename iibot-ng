@@ -121,7 +121,10 @@ fi
 
 nickname=$("${scripts_dir}/config_lookup.py" -f "${irc_config_toml}" -s ii.settings -o nickname)
 check_parser_error "${nickname}" "nickname"
-nickname=${nickname:-"testme"}
+if [ -z "${nickname}" ]; then
+    printf "Nickname must not be empty.\n" 1>&2
+    exit 2
+fi
 
 network=$("${scripts_dir}/config_lookup.py" -f "${irc_config_toml}" -s ii.settings -o server)
 check_parser_error "${network}" "network"
@@ -131,7 +134,10 @@ if [ -z "${network}" ]; then
 fi
 ircdir=$("${scripts_dir}/config_lookup.py" -f "${irc_config_toml}" -s ii.settings -o ircdir)
 check_parser_error "${ircdir}" "ircdir"
-ircdir=${ircdir:-"${HOME}/irc"}
+if [ -z "${ircdir}" ]; then
+    printf "ircdir must not be empty.\n" 1>&2
+    exit 2
+fi
 
 channels=$("${scripts_dir}/config_lookup.py" -f "${irc_config_toml}" -s 'channel.*' -o 'name')
 check_parser_error "${channels}" "channels"
