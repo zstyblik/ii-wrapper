@@ -16,8 +16,70 @@ import sys
 import tomllib
 from typing import Any
 from typing import Dict
+from typing import List
 
 SERVICE = "config_lookup"
+
+
+def config_check(config_file: str) -> (int, List[str]):
+    """Perform basic configuration check and report errors."""
+    retcode = 0
+    errors = []
+    try:
+        data = load_config_file(config_file)
+    except Exception as exc:
+        retcode = 1
+        error = "Failed to parse config file '{}': {}".format(config_file, exc)
+        errors.append(error)
+        return retcode, errors
+
+    if "ii" not in data:
+        retcode = 1
+        error = "Key 'ii' not found in config file '{}'".format(config_file)
+        errors.append(error)
+        return retcode, errors
+
+    if "settings" not in data["ii"]:
+        retcode = 1
+        error = "Key 'ii.settings' not found in config file '{}'".format(
+            config_file
+        )
+        errors.append(error)
+        return retcode, errors
+
+    settings = data["ii"]["settings"]
+    if "server" not in settings or not settings["server"]:
+        retcode = 1
+        errors.append("Config option 'ii.settings.server' must be set")
+
+    if "ircdir" not in settings or not settings["ircdir"]:
+        retcode = 1
+        errors.append("Config option 'ii.settings.ircdir' must be set")
+
+    if "nickname" not in settings or not settings["nickname"]:
+        retcode = 1
+        errors.append("Config option 'ii.settings.nickname' must be set")
+
+    return retcode, errors
+
+
+def config_lookup(
+    config_file: str,
+    config_section: str,
+    config_option: str,
+) -> None:
+    """Lookup value in configuration file and print it on STDOUT.
+
+    On error, prints "parser-error" on STDOUT, errors on STDERR and raises
+    exception.
+    """
+    try:
+        value = fetch_value(config_file, config_section, config_option)
+        print("{}".format(value))
+    except Exception as exc:
+        print("{}".format(exc), file=sys.stderr)
+        print("parser-error")
+        raise
 
 
 def fetch_value(
@@ -26,6 +88,12 @@ def fetch_value(
     config_option: str,
 ) -> Any:
     """Fetch value from config file and return it."""
+    if not config_section:
+        raise KeyError("config section to lookup must be given")
+
+    if not config_option:
+        raise ValueError("config option to lookup must be given")
+
     data = load_config_file(config_file)
     ptr = data
     chunks = config_section.split(".")
@@ -78,17 +146,14 @@ def load_config_file(fname: str) -> Dict[Any, Any]:
 def main():
     """Parse CLI args, load config file and return desired value from it."""
     args = parse_args()
-    try:
-        value = fetch_value(
-            args.config_file,
-            args.config_section,
-            args.config_option,
-        )
-        print("{}".format(value))
-    except Exception as exc:
-        print("{}".format(exc), file=sys.stderr)
-        print("parser-error")
-        raise
+    if args.config_check:
+        retcode, errors = config_check(args.config_file)
+        for error in errors:
+            print(error, file=sys.stderr)
+
+        sys.exit(retcode)
+    else:
+        config_lookup(args.config_file, args.config_section, args.config_option)
 
 
 def parse_args() -> argparse.Namespace:
@@ -108,18 +173,32 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--config-section",
         "-s",
-        required=True,
+        default="",
         type=str,
         help="Name of section in config file.",
     )
     parser.add_argument(
         "--config-option",
         "-o",
-        required=True,
+        default="",
         type=str,
         help="Option to fetch from given section in config file.",
     )
+    parser.add_argument(
+        "--check",
+        dest="config_check",
+        action="store_true",
+        default=False,
+        help="Check configuration file. Other arguments will be ignored.",
+    )
     args = parser.parse_args()
+    if not args.config_check and (
+        not args.config_section or not args.config_option
+    ):
+        parser.error(
+            "Config section and option are required except for config check."
+        )
+
     return args
 
 
