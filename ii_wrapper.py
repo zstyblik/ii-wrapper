@@ -58,18 +58,29 @@ def build_command(cfg: Dict[Any, Any], ii_path: str) -> IICommand:
     cmd_args["-p"] = get_option(ii_settings, "port")
     # NOTE: optional
     cmd_args["-u"] = get_option(ii_settings, "sockname")
-    # NOTE: has default
+    # NOTE: has default which I'm going to ignore.
     cmd_args["-i"] = get_option(ii_settings, "ircdir")
-    # NOTE: has default
+    # NOTE: has default which I'm going to ignore.
     cmd_args["-n"] = get_option(ii_settings, "nickname")
     # NOTE: optional
     cmd_args["-f"] = get_option(ii_settings, "realname")
     # NOTE: optional
     if "server_password" in ii_settings and ii_settings["server_password"]:
-        # NOTE(zstyblik): if server_password is set, then signal it can be read
-        # in IPASS env variable. Also, put password into ENV variable.
+        # NOTE(zstyblik): if server_password is set, then signal to ii that it
+        # can be read in IPASS env variable and setup ENV variable.
         cmd_args["-k"] = "IIPASS"
         new_env["IIPASS"] = get_option(ii_settings, "server_password")
+
+    # NOTE(zstyblik): while some args have default values, however it seems
+    # rather problematic to determine $HOME or $USER or whatever later on.
+    if not cmd_args["-s"]:
+        raise ValueError("ii.settings.server must be configured")
+
+    if not cmd_args["-i"]:
+        raise ValueError("ii.settings.ircdir must be configured")
+
+    if not cmd_args["-n"]:
+        raise ValueError("ii.settings.nickname must be configured")
 
     cmd_args_clean = {
         key: shlex.quote("{}".format(value))
@@ -114,7 +125,7 @@ def exec_command(cmd: IICommand) -> None:
 
 
 def get_option(ii_settings: Dict[Any, Any], key: str) -> str:
-    """If key exists in settings and has value, return it.
+    """If key exists in settings and has value, return its value.
 
     If key doesn't exist or has no value, return an empty string.
     """
