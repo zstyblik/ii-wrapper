@@ -139,6 +139,10 @@ if [ -z "${ircdir}" ]; then
     exit 2
 fi
 
+logdir=$("${scripts_dir}/config_lookup.py" -f "${irc_config_toml}" -s ii.settings -o logdir)
+check_parser_error "${logdir}" "logdir"
+logdir="${logdir:-$ircdir}"
+
 channels=$("${scripts_dir}/config_lookup.py" -f "${irc_config_toml}" -s 'channel.*' -o 'name')
 check_parser_error "${channels}" "channels"
 
@@ -168,8 +172,8 @@ pids=""
 # cleanup stale "in" pipes turned into files
 find "${ircdir}/${network}/" -name 'in' -type f -delete
 # Rotate log, sort of.
-( cat "${ircdir}/${network}.log" >> "${ircdir}/${network}.log.1" && cat /dev/null > "${ircdir}/${network}.log" ) || \
-    printf "Failed to log rotate '%s' - continue anyway.\n" "${ircdir}/${network}.log" 1>&2
+( cat "${logdir}/${network}.log" >> "${logdir}/${network}.log.1" && cat /dev/null > "${logdir}/${network}.log" ) || \
+    printf "Failed to log rotate '%s' - continue anyway.\n" "${logdir}/${network}.log" 1>&2
 # NOTE(zstyblik): if server requires password on connect, then password must be
 # stored in ENV variable and the name of ENV variable MUST BE given as CLI arg,
 # eg. -k IIPASS.
@@ -177,7 +181,7 @@ find "${ircdir}/${network}/" -name 'in' -type f -delete
 # NOTE(zstyblik): there is no way to know if wrapper or ii failed. There will be
 # a PID and RC=0 regardless of failure, therefore these two are worthless.
 "${scripts_dir}/ii_wrapper.py" \
-    -f "${irc_config_toml}" >> "${ircdir}/${network}.log" 2>&1 &
+    -f "${irc_config_toml}" >> "${logdir}/${network}.log" 2>&1 &
 pid="$!"
 
 # wait for the connection

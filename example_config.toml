@@ -1,5 +1,7 @@
 [ii.settings]
 ircdir = "/some/path/irc"
+# NOTE: if not set, log will be stored in $ircdir
+logdir = "/some/other/dir"
 server = "irc.example.com"
 port = 6667
 sockname = ""
