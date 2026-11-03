@@ -105,12 +105,10 @@ remove_lock()
     rmdir "${LOCK_DIR}"
 }
 
-# FIXME: cleanup once systemd unit is updated
 IRC_CONFIG=${1:?Supply name of IRC config to use.}
 
 scripts_dir=$(dirname -- "${0}")
 irc_config_dir=$(dirname -- "${IRC_CONFIG}")
-irc_config_name=$(basename -s .cfg -- "${IRC_CONFIG}")
 irc_config_name=$(basename -s .toml -- "${irc_config_name}")
 irc_config_toml="${irc_config_dir}/${irc_config_name}.toml"
 if [ ! -r "${irc_config_toml}" ]; then
